@@ -1,0 +1,97 @@
+# ================================================================================
+# AGENT 8 - .gitignore
+# ================================================================================
+
+# Checkpoints (trop gros pour GitHub - partage via releases ou LFS)
+checkpoints/
+*.zip
+
+# Models sauvegardés
+*.pkl
+*.h5
+best_model.zip
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Logs et TensorBoard
+*.log
+logs/
+tensorboard_logs/
+output/logs/
+
+# Training outputs
+training_summary_*.json
+checkpoint_*_stats.csv
+checkpoints_analysis/*.csv
+
+# Diagnostic reports (garder localement)
+DIAGNOSTIC_REPORT_*.txt
+interview_report_*.txt
+
+# Data files (si trop gros)
+data/*.csv
+data/*.h5
+*.feather
+
+# Top100 features (deprecated - on utilise ALL features)
+top100_features_*.txt
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# Backup files
+*.bak
+*.backup
+*_backup.py
+
+# Temporary files
+*.tmp
+*.temp
+nul

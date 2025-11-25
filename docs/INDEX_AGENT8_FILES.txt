@@ -1,0 +1,175 @@
+=================================================================================
+AGENT 8 - INDEX COMPLET DES FICHIERS
+=================================================================================
+Date: 2025-11-25
+Structure: Inspired by Agent 7 (organized by category)
+
+=================================================================================
+📁 STRUCTURE
+=================================================================================
+
+AGENT 8 UNIQUEMENT/
+├── training/               # Scripts d'entraînement
+│   └── train.py            # Training PPO 500K steps
+│
+├── environment/            # Environnement RL
+│   └── trading_env.py      # Main environment (7 NUCLEAR fixes + 3 updates)
+│
+├── callbacks/              # Callbacks pour training
+│   └── (vide pour l'instant - à créer si nécessaire)
+│
+├── analysis/               # Scripts d'analyse post-training
+│   └── interview.py        # Diagnostic 8 questions
+│
+├── tests/                  # Scripts de test
+│   └── (à créer)
+│
+├── launchers/              # Batch launchers
+│   ├── RUN_TRAINING.bat    # Lance training
+│   ├── RUN_INTERVIEW.bat   # Lance interview
+│   └── PUSH_TO_GITHUB.bat  # Push vers GitHub
+│
+├── docs/                   # Documentation
+│   ├── README.md           # Main README (GitHub)
+│   ├── START_HERE.md       # Guide rapide
+│   ├── DIAGNOSTIC_URGENT.md # Analyse 0 trades
+│   ├── V2.7_CHANGES.md     # 7 NUCLEAR fixes
+│   ├── V2.7_CRITICAL_FIXES_APPLIED.md # 3 derniers fixes
+│   ├── GITHUB_READY.md     # Guide push GitHub
+│   ├── README_GITHUB.md    # Backup README
+│   ├── INDEX_AGENT8_FILES.txt # Ce fichier
+│   └── RULES_CRITICAL.txt  # Règles CRITIQUES
+│
+├── outputs/                # Outputs training
+│   ├── checkpoints/        # Models sauvegardés (.zip)
+│   ├── checkpoints_analysis/ # Stats CSV
+│   └── logs/               # TensorBoard logs
+│
+├── .gitignore              # Git ignore config
+├── requirements.txt        # Python dependencies
+└── README.md               # Main README (symlink to docs/README.md)
+
+=================================================================================
+🎯 FICHIERS PRINCIPAUX
+=================================================================================
+
+**Environment** (Le cœur du système):
+  📄 environment/trading_env.py (96KB)
+     - 7 NUCLEAR fixes pour mode collapse
+     - 3 CRITICAL updates (reward scale, RSI, over-trading)
+     - PPO discrete action space
+     - ALL features (pas top100)
+
+**Training**:
+  📄 training/train.py (24KB)
+     - PPO algorithm
+     - Entropy schedule: 0.40 → 0.20
+     - 500K steps validation
+     - Checkpoints every 50K
+
+**Analysis**:
+  📄 analysis/interview.py (21KB)
+     - 8 critical questions
+     - Diagnostique mode collapse
+     - Génère rapport détaillé
+
+**Launchers**:
+  📄 launchers/RUN_TRAINING.bat
+     - Lance training depuis n'importe où
+  📄 launchers/RUN_INTERVIEW.bat
+     - Lance interview depuis n'importe où
+  📄 launchers/PUSH_TO_GITHUB.bat
+     - Push automatique vers GitHub
+
+**Documentation**:
+  📄 docs/START_HERE.md
+     - Point de départ rapide
+  📄 docs/DIAGNOSTIC_URGENT.md
+     - Analyse détaillée problème 0 trades
+  📄 docs/RULES_CRITICAL.txt
+     - Règles à respecter ABSOLUMENT
+
+=================================================================================
+🚫 RÈGLES CRITIQUES
+=================================================================================
+
+1. ❌ NE JAMAIS créer de nouvelles versions (V2.8, V2.9, V3.0)
+2. ✅ TOUJOURS modifier DIRECTEMENT environment/trading_env.py
+3. ✅ TOUJOURS travailler dans C:\Users\lbye3\Desktop\AGENT 8 UNIQUEMENT
+4. ❌ NE PAS toucher à C:\Users\lbye3\Desktop\GoldRL\AGENT\AGENT 8\ALGO AGENT 8 RL\V2
+5. ✅ TOUJOURS pusher sur GitHub après modifications importantes
+6. ✅ TOUJOURS tester avant de pusher
+
+=================================================================================
+📊 OUTPUTS GÉNÉRÉS
+=================================================================================
+
+**Pendant Training**:
+  - outputs/checkpoints/agent8_checkpoint_50000_steps.zip
+  - outputs/checkpoints/agent8_checkpoint_100000_steps.zip
+  - ... (every 50K)
+  - outputs/checkpoints/agent8_500k_final.zip
+
+**Analyse Checkpoints**:
+  - outputs/checkpoints_analysis/checkpoint_50000_stats.csv
+  - outputs/checkpoints_analysis/checkpoint_100000_stats.csv
+  - ... (every 50K)
+
+**TensorBoard Logs**:
+  - outputs/logs/PPO_1/events.out.tfevents.*
+
+**Interview Reports**:
+  - DIAGNOSTIC_REPORT_*.txt (à la racine)
+
+=================================================================================
+🔧 MODIFICATIONS FRÉQUENTES
+=================================================================================
+
+**Modifier Environment**:
+  1. Ouvrir: environment/trading_env.py
+  2. Modifier sections critiques:
+     - Lines 428-472: Demonstration Learning (RSI thresholds)
+     - Lines 880-1237: Reward calculation
+     - Line 1235: Trading Action Rewards (protected)
+  3. Tester: launchers/RUN_INTERVIEW.bat (quick test)
+  4. Push: launchers/PUSH_TO_GITHUB.bat
+
+**Modifier Hyperparams**:
+  1. Ouvrir: training/train.py
+  2. Modifier:
+     - Line 50: total_timesteps
+     - Lines 91-92: ent_coef_start/end
+  3. Tester: launchers/RUN_TRAINING.bat
+
+**Ajouter Documentation**:
+  1. Créer dans: docs/
+  2. Update INDEX_AGENT8_FILES.txt
+  3. Push
+
+=================================================================================
+🚀 QUICK START
+=================================================================================
+
+**Training**:
+  Double-clic: launchers/RUN_TRAINING.bat
+
+**Interview**:
+  Double-clic: launchers/RUN_INTERVIEW.bat
+
+**Push GitHub**:
+  Double-clic: launchers/PUSH_TO_GITHUB.bat
+
+=================================================================================
+📝 NOTES
+=================================================================================
+
+- Structure inspirée de Agent 7 (plus professionnelle)
+- Tous les fichiers en anglais (standard GitHub)
+- .gitignore exclut checkpoints (trop gros)
+- README.md à la racine = copie de docs/README.md (GitHub)
+- Pas de top100_features (utilise ALL features)
+
+=================================================================================
+Last updated: 2025-11-25
+Repository: https://github.com/tradingluca31-boop/AGENT-8-UNIQUEMENT-
+=================================================================================

@@ -1,0 +1,226 @@
+=================================================================================
+🚨 AGENT 8 - RÈGLES CRITIQUES (À RESPECTER ABSOLUMENT!)
+=================================================================================
+
+Date: 2025-11-25
+Pour: Claude Code + User
+Importance: MAXIMUM
+
+=================================================================================
+❌ INTERDICTIONS ABSOLUES
+=================================================================================
+
+1. ❌ NE JAMAIS créer de nouvelles versions
+   - Pas de V2.8, V2.9, V3.0, V4.0
+   - Pas de trading_env_v2_8.py, train_v3.py, etc.
+   - UN SEUL fichier: environment/trading_env.py
+   - UN SEUL script: training/train.py
+
+   RAISON: Éviter confusion, doublons, perte de code
+
+2. ❌ NE JAMAIS toucher au dossier V2
+   - C:\Users\lbye3\Desktop\GoldRL\AGENT\AGENT 8\ALGO AGENT 8 RL\V2
+   - Voir DONT_TOUCH.txt dans ce dossier
+   - C'est l'ANCIEN emplacement (obsolète)
+
+   RAISON: Éviter modifications accidentelles de l'ancien code
+
+3. ❌ NE JAMAIS utiliser top100_features
+   - Pas de top100_features_agent8.txt
+   - Pas de load_agent_features()
+   - TOUJOURS utiliser ALL features (199 features)
+
+   RAISON: L'utilisateur a supprimé top100 il y a longtemps
+
+4. ❌ NE JAMAIS commit checkpoints sur GitHub
+   - Fichiers .zip trop gros (>100MB)
+   - .gitignore les exclut automatiquement
+
+   RAISON: GitHub refuse les fichiers >100MB
+
+5. ❌ NE JAMAIS modifier sans tester
+   - Toujours lancer interview.py ou train.py après modif
+   - Vérifier que ça ne crash pas
+
+   RAISON: Éviter push de code cassé
+
+=================================================================================
+✅ OBLIGATIONS
+=================================================================================
+
+1. ✅ TOUJOURS travailler dans ce dossier
+   - C:\Users\lbye3\Desktop\AGENT 8 UNIQUEMENT
+
+   EMPLACEMENT UNIQUE pour Agent 8
+
+2. ✅ TOUJOURS modifier DIRECTEMENT
+   - environment/trading_env.py (pour environnement)
+   - training/train.py (pour hyperparams)
+   - analysis/interview.py (pour diagnostic)
+
+   PAS DE COPIES, PAS DE VERSIONS
+
+3. ✅ TOUJOURS pusher sur GitHub après modifs importantes
+   - launchers/PUSH_TO_GITHUB.bat
+   - Ou commandes git manuelles
+   - Repository: https://github.com/tradingluca31-boop/AGENT-8-UNIQUEMENT-
+
+   BACKUP + COLLABORATION
+
+4. ✅ TOUJOURS documenter les changements
+   - Ajouter commentaires dans code
+   - Update docs/ si nécessaire
+   - Commit message clair
+
+   TRAÇABILITÉ
+
+5. ✅ TOUJOURS respecter la structure
+   - training/ pour scripts training
+   - environment/ pour environnement RL
+   - analysis/ pour scripts analyse
+   - launchers/ pour BAT files
+   - docs/ pour documentation
+   - outputs/ pour résultats
+
+   ORGANISATION
+
+=================================================================================
+🎯 WORKFLOW CORRECT
+=================================================================================
+
+**Scénario 1: Fixer un bug dans l'environnement**
+
+❌ MAUVAIS:
+  1. Copier trading_env.py → trading_env_v2_8.py
+  2. Modifier trading_env_v2_8.py
+  3. Créer train_v2_8.py
+  4. Confusion totale
+
+✅ BON:
+  1. Ouvrir environment/trading_env.py
+  2. Modifier DIRECTEMENT
+  3. Tester avec launchers/RUN_INTERVIEW.bat
+  4. Si OK: git add . && git commit -m "fix: reward_scale=1.0 in Phase 1" && git push
+
+**Scénario 2: Changer hyperparams**
+
+❌ MAUVAIS:
+  1. Copier train.py → train_new.py
+  2. Modifier train_new.py
+  3. Doublons
+
+✅ BON:
+  1. Ouvrir training/train.py
+  2. Modifier line 50: total_timesteps
+  3. Tester avec launchers/RUN_TRAINING.bat
+  4. Push si succès
+
+**Scénario 3: Ajouter une feature**
+
+❌ MAUVAIS:
+  1. Créer trading_env_with_new_feature.py
+  2. Créer train_new_feature.py
+
+✅ BON:
+  1. Modifier environment/trading_env.py
+  2. Ajouter la feature directement
+  3. Tester
+  4. Documenter dans commentaires
+  5. Push
+
+=================================================================================
+📝 COMMIT MESSAGE CONVENTION
+=================================================================================
+
+**Format**: <type>: <description>
+
+**Types**:
+  - fix: Bug fix
+  - feat: Nouvelle feature
+  - docs: Documentation
+  - refactor: Refactoring
+  - test: Tests
+  - chore: Maintenance
+
+**Exemples BONS**:
+  ✅ fix: reward_scale=1.0 during Phase 1 to prevent dilution
+  ✅ feat: add brutal force trading after 1000 steps if 0 trades
+  ✅ docs: update README with organized structure
+  ✅ refactor: simplify demonstration learning RSI logic
+
+**Exemples MAUVAIS**:
+  ❌ update
+  ❌ fix bug
+  ❌ changes
+  ❌ v2.8
+
+=================================================================================
+🔍 CHECKLIST AVANT PUSH
+=================================================================================
+
+Avant de pusher sur GitHub, vérifier:
+
+[ ] Code testé (au moins interview ou 10K steps training)
+[ ] Pas de fichiers .zip dans git status
+[ ] Commit message clair et descriptif
+[ ] Pas de nouvelles versions créées (pas de _v2_8)
+[ ] Modifications dans les bons dossiers (environment/, training/, etc.)
+[ ] Documentation à jour si nécessaire
+[ ] .gitignore à jour
+
+=================================================================================
+🚨 EN CAS DE CONFUSION
+=================================================================================
+
+**Question**: "Je dois créer V2.8 pour tester un fix?"
+**Réponse**: ❌ NON! Modifie DIRECTEMENT environment/trading_env.py
+
+**Question**: "Je dois copier le fichier avant de modifier?"
+**Réponse**: ❌ NON! Modifie DIRECTEMENT (git garde l'historique)
+
+**Question**: "Je dois travailler dans quel dossier?"
+**Réponse**: ✅ C:\Users\lbye3\Desktop\AGENT 8 UNIQUEMENT
+
+**Question**: "Je push les checkpoints?"
+**Réponse**: ❌ NON! .gitignore les exclut automatiquement
+
+**Question**: "J'utilise top100_features?"
+**Réponse**: ❌ NON! ALL features (199 features)
+
+=================================================================================
+📞 AIDE-MÉMOIRE
+=================================================================================
+
+**Modify Environment**:
+  → environment/trading_env.py
+
+**Modify Training**:
+  → training/train.py
+
+**Run Training**:
+  → launchers/RUN_TRAINING.bat
+
+**Run Interview**:
+  → launchers/RUN_INTERVIEW.bat
+
+**Push to GitHub**:
+  → launchers/PUSH_TO_GITHUB.bat
+
+**Check Structure**:
+  → docs/INDEX_AGENT8_FILES.txt
+
+**Read Rules**:
+  → docs/RULES_CRITICAL.txt (ce fichier)
+
+=================================================================================
+✅ RÉSUMÉ EN 3 POINTS
+=================================================================================
+
+1. 📂 UN SEUL DOSSIER: C:\Users\lbye3\Desktop\AGENT 8 UNIQUEMENT
+2. 📝 UN SEUL FICHIER PAR TYPE: trading_env.py, train.py (pas de versions)
+3. 🚀 PUSH APRÈS CHAQUE MODIF IMPORTANTE: launchers/PUSH_TO_GITHUB.bat
+
+=================================================================================
+Last updated: 2025-11-25
+Repository: https://github.com/tradingluca31-boop/AGENT-8-UNIQUEMENT-
+=================================================================================
