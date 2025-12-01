@@ -395,6 +395,17 @@ class GoldTradingEnvAgent8(gym.Env):
         # NOTE: We DO NOT reset winner_patterns and loser_patterns
         # They persist across episodes (accumulate learning)
 
+        # FIX 8 V2.7 CRITICAL: Reset over-trading protection
+        # Without this, last_trade_open_step keeps value from previous episode
+        # causing (current_step - last_trade_open_step) to be NEGATIVE → blocks ALL trades!
+        self.last_trade_open_step = -10  # Allow first trade immediately (10 bars "ago")
+
+        # V2.7 Tracking flags reset (for callbacks)
+        self.position_opened_this_step = False
+        self.position_closed_this_step = False
+        self.last_closed_pnl = 0.0
+        self.demonstration_trade_this_step = False
+
         observation = self._get_observation()
         info = self._get_info()
 

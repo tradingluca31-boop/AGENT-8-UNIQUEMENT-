@@ -1,0 +1,13 @@
+{
+  "timestamp": "2025-12-01T19:56:15.553078",
+  "total_timesteps": 10000,
+  "results": {
+    "total_steps": 10240,
+    "sell_pct": 30.830078125,
+    "hold_pct": 34.4921875,
+    "buy_pct": 34.677734375,
+    "total_trades": 0
+  },
+  "success": false,
+  "train_time_seconds": 16.55808448791504
+}

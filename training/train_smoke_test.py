@@ -184,6 +184,7 @@ class SmokeTestCallback(BaseCallback):
         super().__init__(verbose)
         self.action_counts = {0: 0, 1: 0, 2: 0}  # SELL, HOLD, BUY
         self.total_trades = 0
+        self.positions_opened = 0  # NEW: Count positions opened
         self.last_print = 0
 
     def _on_step(self) -> bool:
@@ -196,6 +197,11 @@ class SmokeTestCallback(BaseCallback):
         if action in self.action_counts:
             self.action_counts[action] += 1
 
+        # NEW: Track positions opened
+        env = self.training_env.envs[0]
+        if hasattr(env, 'position_opened_this_step') and env.position_opened_this_step:
+            self.positions_opened += 1
+
         # Print progress every 2000 steps
         if self.num_timesteps - self.last_print >= 2000:
             total = sum(self.action_counts.values())
@@ -205,10 +211,12 @@ class SmokeTestCallback(BaseCallback):
                 pct_buy = self.action_counts[2] / total * 100
 
                 # Get trades from env
-                if hasattr(self.training_env.envs[0], 'trades'):
-                    self.total_trades = len(self.training_env.envs[0].trades)
+                if hasattr(env, 'trades'):
+                    self.total_trades = len(env.trades)
 
-                print(f"  Step {self.num_timesteps:,}: SELL {pct_sell:.1f}% | HOLD {pct_hold:.1f}% | BUY {pct_buy:.1f}% | Trades: {self.total_trades}")
+                # NEW: Show positions opened AND trades closed
+                pos_info = f"Opened: {self.positions_opened}" if self.positions_opened > 0 else "Opened: 0"
+                print(f"  Step {self.num_timesteps:,}: SELL {pct_sell:.1f}% | HOLD {pct_hold:.1f}% | BUY {pct_buy:.1f}% | {pos_info} | Closed: {self.total_trades}")
 
             self.last_print = self.num_timesteps
 
@@ -224,6 +232,7 @@ class SmokeTestCallback(BaseCallback):
             'sell_pct': self.action_counts[0] / total * 100,
             'hold_pct': self.action_counts[1] / total * 100,
             'buy_pct': self.action_counts[2] / total * 100,
+            'positions_opened': self.positions_opened,  # NEW
             'total_trades': self.total_trades
         }
 
@@ -286,27 +295,34 @@ print("=" * 60)
 results = callback.get_results()
 
 if results:
-    print(f"  Total Steps:  {results['total_steps']:,}")
-    print(f"  SELL:         {results['sell_pct']:.1f}%")
-    print(f"  HOLD:         {results['hold_pct']:.1f}%")
-    print(f"  BUY:          {results['buy_pct']:.1f}%")
-    print(f"  Total Trades: {results['total_trades']}")
+    print(f"  Total Steps:      {results['total_steps']:,}")
+    print(f"  SELL:             {results['sell_pct']:.1f}%")
+    print(f"  HOLD:             {results['hold_pct']:.1f}%")
+    print(f"  BUY:              {results['buy_pct']:.1f}%")
+    print(f"  Positions Opened: {results['positions_opened']}")  # NEW
+    print(f"  Trades Closed:    {results['total_trades']}")
     print()
 
     # SUCCESS/FAILURE
     print("=" * 60)
     if results['total_trades'] >= 5:
-        print("✅ SUCCESS! Agent is TRADING!")
-        print(f"   {results['total_trades']} trades detected")
-        print("   → Ready for full training (500K steps)")
+        print("SUCCESS! Agent is TRADING!")
+        print(f"   {results['total_trades']} trades closed")
+        print("   Ready for full training (500K steps)")
     elif results['total_trades'] > 0:
-        print("⚠️ PARTIAL SUCCESS - Agent trades but not enough")
-        print(f"   Only {results['total_trades']} trades (expected >5)")
-        print("   → May need more steps or stronger fixes")
+        print("PARTIAL SUCCESS - Agent trades but not enough")
+        print(f"   Only {results['total_trades']} trades closed (expected >5)")
+        print("   May need more steps or stronger fixes")
+    elif results['positions_opened'] > 0:
+        # NEW: Positions opened but none closed
+        print("PARTIAL - Positions OPENED but NOT CLOSED!")
+        print(f"   {results['positions_opened']} positions opened")
+        print(f"   0 positions closed (TP/SL never hit?)")
+        print("   Check: Is ATR too large? Is TP/SL unreachable?")
     else:
-        print("❌ FAILURE - Agent still NOT TRADING!")
-        print("   0 trades detected")
-        print("   → Check docs/DIAGNOSTIC_URGENT.md for fixes")
+        print("FAILURE - Agent NOT OPENING positions!")
+        print("   0 positions opened")
+        print("   Check: _open_position() blocked? FIX 8 too aggressive?")
     print("=" * 60)
 
     # Save results
