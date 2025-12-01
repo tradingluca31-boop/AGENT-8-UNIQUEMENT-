@@ -1,0 +1,417 @@
+{
+  "project_info": {
+    "name": "AGENT 8 - RL Trading Bot",
+    "version": "V2.7 NUCLEAR",
+    "status": "🔥 Active Development - Resolving 0 trades issue",
+    "repository": "https://github.com/tradingluca31-boop/AGENT-8-UNIQUEMENT-",
+    "last_update": "2025-12-01",
+    "description": "Reinforcement Learning agent for Gold (XAUUSD) trading on M15 timeframe using mean reversion strategy"
+  },
+
+  "current_problem": {
+    "title": "0 TRADES AT CHECKPOINT 250K",
+    "severity": "CRITICAL",
+    "symptoms": [
+      "Total trades: 0",
+      "Total reward: +110,232 (positive but passive)",
+      "Actions: SELL 0%, HOLD 0%, BUY 0%",
+      "Agent stays in HOLD mode permanently"
+    ],
+    "root_causes": [
+      {
+        "hypothesis": "Reward Scale Dilution",
+        "priority": "HIGHEST",
+        "explanation": "reward_scale = 0.3 (because 0 trades) dilutes ALL rewards. The +5.0 Trading Action Rewards become +1.5",
+        "fix_required": "Force reward_scale = 1.0 during Phase 1 (0-100K steps)"
+      },
+      {
+        "hypothesis": "Over-Trading Protection Too Strict",
+        "priority": "HIGH",
+        "explanation": "if self.current_step - self.last_trade_open_step < 10: return blocks the first 10 steps of each episode",
+        "fix_required": "Add condition: if self.current_step > 10 and ..."
+      },
+      {
+        "hypothesis": "Demonstration Learning Phase Not Detected",
+        "priority": "MEDIUM",
+        "explanation": "Phase 1 (0-100K) should force 100% trades RSI + MEGA rewards, but maybe global_timestep not updated",
+        "fix_required": "Verify global_timestep is passed correctly"
+      }
+    ]
+  },
+
+  "fixes_to_apply": [
+    {
+      "fix_number": 1,
+      "priority": "CRITICAL",
+      "title": "Fix Reward Scale in Phase 1",
+      "file": "environment/trading_env.py",
+      "line": "~872",
+      "action": "Add before reward calculation",
+      "code": "if self.global_timestep < 100000:\n    reward_scale = 1.0  # No dilution in Phase 1!\nelif len(self.trades) < 10:\n    reward_scale = 0.3\nelif len(self.trades) < 50:\n    reward_scale = 0.6\nelse:\n    reward_scale = 1.0",
+      "expected_impact": "Agent will see full +5.0 rewards for trading actions, encouraging trades"
+    },
+    {
+      "fix_number": 2,
+      "priority": "HIGH",
+      "title": "Fix Over-Trading Protection",
+      "file": "environment/trading_env.py",
+      "line": "~525",
+      "action": "Modify condition",
+      "code_before": "if self.current_step - self.last_trade_open_step < 10:\n    return",
+      "code_after": "if self.current_step > 10 and self.current_step - self.last_trade_open_step < 10:\n    return",
+      "expected_impact": "Won't block trades in the first 10 steps of episode"
+    },
+    {
+      "fix_number": 3,
+      "priority": "MEDIUM",
+      "title": "Quick Test 10K Steps",
+      "file": "training/train.py",
+      "line": "~94",
+      "action": "Change for quick test",
+      "code": "total_timesteps = 10_000  # Quick test (5 min)",
+      "success_criteria": "total_trades > 5 in checkpoint_10000_stats.csv",
+      "restore_after_test": "total_timesteps = 500_000"
+    }
+  ],
+
+  "critical_rules": {
+    "NEVER_DO": [
+      "Create new versions (V2.8, V3.0, etc.)",
+      "Touch the old V2 folder (obsolete)",
+      "Use top100_features (we use ALL 199 features)",
+      "Commit checkpoints to GitHub (files > 100MB)",
+      "Modify without testing"
+    ],
+    "ALWAYS_DO": [
+      "Work in this directory ONLY: C:\\Users\\lbye3\\Desktop\\AGENT 8 UNIQUEMENT",
+      "Modify files DIRECTLY (no copies, git keeps history)",
+      "Log ALL modifications with modification_tracker.py",
+      "Test after EVERY modification",
+      "Push to GitHub after important changes",
+      "Respect the folder structure"
+    ]
+  },
+
+  "file_structure": {
+    "key_files": {
+      "environment/trading_env.py": {
+        "role": "Gymnasium environment for RL agent",
+        "lines": "~1500+",
+        "features": "Action Space: Discrete(3) [0=SELL, 1=HOLD, 2=BUY], 199 features, 7 NUCLEAR + 3 CRITICAL fixes",
+        "last_modified": "2025-11-25",
+        "current_issues": "reward_scale dilution, over-trading protection too strict"
+      },
+      "training/train.py": {
+        "role": "PPO training script",
+        "lines": "~680",
+        "config": "PPO, 500K steps, entropy 0.40→0.20, network [256,256]",
+        "last_modified": "2025-11-25"
+      },
+      "analysis/interview.py": {
+        "role": "Diagnostic tool - 8 critical questions",
+        "lines": "~500+",
+        "output": "DIAGNOSTIC_REPORT_V27_*.txt"
+      },
+      "analysis/modification_tracker.py": {
+        "role": "Automated modification tracking system",
+        "lines": "~500+",
+        "created": "2025-12-01",
+        "usage": "python modification_tracker.py --action log/report/summary"
+      }
+    },
+    "documentation_files": {
+      "ACTUALITE_MISE_A_JOUR.md": "Central documentation - READ FIRST!",
+      "AGENT_8_MEMORY.json": "This file - Complete project memory",
+      "docs/RULES_CRITICAL.txt": "Critical rules to respect",
+      "docs/DIAGNOSTIC_URGENT.md": "Detailed analysis of 0 trades problem",
+      "docs/V2.7_CHANGES.md": "7 NUCLEAR fixes documentation",
+      "docs/GUIDE_TRACKING.md": "How to use the tracking system",
+      "docs/daily_reports/": "Daily reports folder"
+    }
+  },
+
+  "tracking_system": {
+    "description": "Automated modification tracking for collaboration between Claude Code agents",
+    "created": "2025-12-01",
+    "files": {
+      "modification_tracker.py": "Main tracking script",
+      "MODIFICATIONS_LOG.json": "Database of all modifications",
+      "LOG_MODIFICATION.bat": "Windows batch file for easy logging",
+      "GENERATE_REPORT.bat": "Windows batch file for report generation"
+    },
+    "categories": {
+      "FIX": "Bug fix",
+      "FEAT": "New feature",
+      "REFACTOR": "Code refactoring",
+      "DOCS": "Documentation",
+      "TEST": "Tests",
+      "PERF": "Performance optimization",
+      "CONFIG": "Configuration",
+      "DATA": "Data/Features"
+    },
+    "workflow": {
+      "1_start_session": "Read ACTUALITE_MISE_A_JOUR.md and latest daily report",
+      "2_during_work": "Log EVERY modification with modification_tracker.py",
+      "3_end_session": "Generate daily report with --action report",
+      "4_push": "git add . && git commit -m '...' && git push"
+    }
+  },
+
+  "architecture": {
+    "objective": "RL trading agent for Gold (XAUUSD) M15 timeframe",
+    "strategy": "Mean reversion",
+    "algorithm": "PPO (Proximal Policy Optimization)",
+    "action_space": "Discrete(3) - [0=SELL, 1=HOLD, 2=BUY]",
+    "observation_space": "199 features (technical indicators, correlations, macro data)",
+    "network": "[256, 256] neurons",
+    "training": {
+      "total_timesteps": 500000,
+      "validation": "500K steps (~40 min)",
+      "production": "1M+ steps",
+      "checkpoints": "Every 50K steps"
+    },
+    "features": {
+      "total": 199,
+      "categories": [
+        "Technical Indicators: SMA, EMA, RSI, MACD, ADX, Bollinger Bands, ATR, Stochastic",
+        "Correlations: EURUSD, USDJPY, DXY, USDCHF, AUDJPY, Silver",
+        "Macro/Fundamental: COT data (CFTC), US macro events (FOMC, NFP, CPI), Seasonality"
+      ],
+      "note": "Using ALL 199 features, NOT top100 (top100_features was removed)"
+    }
+  },
+
+  "v2_7_nuclear_fixes": [
+    {
+      "fix": 1,
+      "name": "Trading Action Rewards",
+      "status": "APPLIED BUT NOT WORKING (diluted by reward_scale)",
+      "rewards": {
+        "open_position": "+5.0",
+        "close_profitable": "+5.0",
+        "close_loss": "-1.0"
+      },
+      "mathematics": "Profitable trade: +10.0 total, Losing trade: +4.0 total, HOLD: 0.0",
+      "issue": "Added AFTER scaling but reward_scale=0.3 still affects earlier rewards"
+    },
+    {
+      "fix": 2,
+      "name": "Bonuses x20",
+      "status": "APPLIED",
+      "bonuses": {
+        "direction_prediction": 0.4,
+        "profit_taking_4R": 4.0,
+        "profit_taking_2R": 2.0,
+        "loss_cutting": 0.6,
+        "trade_completion": 2.0
+      }
+    },
+    {
+      "fix": 3,
+      "name": "HOLD Penalty Exponential",
+      "status": "APPLIED",
+      "formula": "-2.0 × ((holds-5)/5)²",
+      "thresholds": {
+        "5_holds": 0.0,
+        "10_holds": -2.0,
+        "15_holds": -8.0,
+        "20_holds": -18.0
+      }
+    },
+    {
+      "fix": 4,
+      "name": "Action Masking 5/10",
+      "status": "APPLIED",
+      "rule": "Block action if repeated ≥5 times in last 10"
+    },
+    {
+      "fix": 5,
+      "name": "Demonstration Learning",
+      "status": "APPLIED BUT MAY NOT WORK",
+      "phases": {
+        "phase_1": "0-100K: Force 100% smart trades (RSI <40/>60) + MEGA rewards (+10.0)",
+        "phase_2": "100K-300K: Force 50%→0%, rewards +5.0",
+        "phase_3": "300K-500K: Autonomy, rewards +2.0"
+      },
+      "issue": "RSI thresholds widened to <40/>60 but maybe still not enough opportunities"
+    },
+    {
+      "fix": 6,
+      "name": "Forced Trading",
+      "status": "APPLIED",
+      "trigger": "If 0 trades after 1000 steps, force random BUY or SELL"
+    },
+    {
+      "fix": 7,
+      "name": "Feature Removal",
+      "status": "SKIPPED",
+      "reason": "User requested to keep all features for now"
+    },
+    {
+      "fix": 8,
+      "name": "Over-Trading Protection",
+      "status": "APPLIED BUT TOO STRICT",
+      "rule": "Max 1 trade per 10 bars (2.5 hours on M15)",
+      "issue": "Blocks trades in first 10 steps of episode → NEEDS FIX #2"
+    }
+  ],
+
+  "performance_targets": {
+    "short_term": {
+      "test": "10K steps (5 min)",
+      "criteria": [
+        "total_trades > 5",
+        "At least 1 action used (not 100% HOLD)"
+      ]
+    },
+    "medium_term": {
+      "test": "50K steps (20 min)",
+      "criteria": [
+        "total_trades > 20",
+        "Action distribution: ~30% SELL, ~30% HOLD, ~30% BUY",
+        "Entropy > 0.20"
+      ]
+    },
+    "long_term": {
+      "test": "500K steps (40 min)",
+      "criteria": [
+        "total_trades > 100",
+        "Win Rate > 50%",
+        "Sharpe Ratio > 1.2",
+        "Max Drawdown < 8%",
+        "ROI 10-15%",
+        "FTMO Compliant (Max DD < 10%, Daily Loss < 5%)"
+      ]
+    }
+  },
+
+  "test_results_history": {
+    "checkpoint_50K": {
+      "total_trades": 0,
+      "status": "FAILED"
+    },
+    "checkpoint_100K": {
+      "total_trades": 0,
+      "status": "FAILED"
+    },
+    "checkpoint_150K": {
+      "total_trades": 0,
+      "status": "FAILED"
+    },
+    "checkpoint_200K": {
+      "total_trades": 0,
+      "status": "FAILED"
+    },
+    "checkpoint_250K": {
+      "total_trades": 0,
+      "total_reward": 110232.65,
+      "actions": "SELL 0%, HOLD 0%, BUY 0%",
+      "status": "FAILED",
+      "pattern": "Systematic problem from the beginning of training"
+    }
+  },
+
+  "next_actions": {
+    "priority_1_critical": {
+      "action": "Apply FIX #1: reward_scale=1.0 in Phase 1",
+      "file": "environment/trading_env.py",
+      "line": "~872",
+      "estimated_time": "2 min"
+    },
+    "priority_2_high": {
+      "action": "Apply FIX #2: Fix over-trading protection",
+      "file": "environment/trading_env.py",
+      "line": "~525",
+      "estimated_time": "1 min"
+    },
+    "priority_3_test": {
+      "action": "Quick test 10K steps",
+      "steps": [
+        "Modify train.py line 94: total_timesteps = 10_000",
+        "Run: python training/train.py",
+        "Check: checkpoints_analysis/checkpoint_10000_stats.csv",
+        "Verify: total_trades > 5"
+      ],
+      "estimated_time": "5 min",
+      "success_criteria": "total_trades > 5"
+    },
+    "priority_4_log": {
+      "action": "Log all modifications",
+      "command": "python analysis/modification_tracker.py --action log --category FIX --message 'Description' --files 'file.py'"
+    },
+    "priority_5_report": {
+      "action": "Generate daily report",
+      "command": "python analysis/modification_tracker.py --action report"
+    }
+  },
+
+  "useful_commands": {
+    "training": {
+      "command": "python training/train.py",
+      "alternative": "launchers\\RUN_TRAINING.bat",
+      "note": "Modify total_timesteps in train.py for quick tests"
+    },
+    "diagnostic": {
+      "command": "python analysis/interview.py",
+      "alternative": "launchers\\RUN_INTERVIEW.bat",
+      "output": "DIAGNOSTIC_REPORT_V27_*.txt"
+    },
+    "tracking": {
+      "log_modification": "python analysis/modification_tracker.py --action log --category FIX --message 'msg'",
+      "log_modification_bat": "launchers\\LOG_MODIFICATION.bat",
+      "generate_report": "python analysis/modification_tracker.py --action report",
+      "generate_report_bat": "launchers\\GENERATE_REPORT.bat",
+      "view_stats": "python analysis/modification_tracker.py --action summary",
+      "view_today": "python analysis/modification_tracker.py --action today"
+    },
+    "git": {
+      "push": "git add . && git commit -m 'message' && git push",
+      "push_bat": "launchers\\PUSH_TO_GITHUB.bat"
+    }
+  },
+
+  "workflow_for_next_session": {
+    "step_1": "Read this file (AGENT_8_MEMORY.json) to understand project state",
+    "step_2": "Read ACTUALITE_MISE_A_JOUR.md for detailed documentation",
+    "step_3": "Read latest daily report in docs/daily_reports/",
+    "step_4": "Apply FIX #1 and FIX #2 (see next_actions above)",
+    "step_5": "Test with 10K steps",
+    "step_6": "Log modifications with modification_tracker.py",
+    "step_7": "Verify results in checkpoints_analysis/checkpoint_10000_stats.csv",
+    "step_8": "Generate daily report",
+    "step_9": "Push to GitHub"
+  },
+
+  "important_notes": [
+    "This is the ONLY project folder: C:\\Users\\lbye3\\Desktop\\AGENT 8 UNIQUEMENT",
+    "The old V2 folder is OBSOLETE, never touch it",
+    "ALWAYS use ALL 199 features, NOT top100_features",
+    "GitHub repo: https://github.com/tradingluca31-boop/AGENT-8-UNIQUEMENT-",
+    "User works on multiple PCs, always pull before starting, push after finishing",
+    "Problem 0 trades is CRITICAL and must be solved before any optimization",
+    "The tracking system was created on 2025-12-01 to facilitate collaboration"
+  ],
+
+  "references": {
+    "papers": [
+      "Haarnoja et al. (2018) - Soft Actor-Critic: Off-Policy Maximum Entropy Deep RL",
+      "Hester et al. (2018) - Deep Q-learning from Demonstrations",
+      "Narvekar et al. (2020) - Curriculum Learning for Reinforcement Learning Domains",
+      "Ng et al. (1999) - Policy Invariance Under Reward Transformations"
+    ],
+    "hedge_fund_standards": [
+      "Renaissance Technologies: Adaptive entropy scheduling, curriculum learning",
+      "Two Sigma: Real-time monitoring, behavioral diversity enforcement",
+      "Citadel: Constrained exploration, demonstration-based learning"
+    ]
+  },
+
+  "metadata": {
+    "memory_file_version": "1.0",
+    "created": "2025-12-01",
+    "last_updated": "2025-12-01",
+    "created_by": "Claude Code Agent",
+    "purpose": "Provide complete project memory for Claude Code agents across sessions and PCs",
+    "usage": "READ THIS FILE at the start of EVERY session to understand project state"
+  }
+}
