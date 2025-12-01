@@ -215,30 +215,115 @@ AGENT 8 UNIQUEMENT/
 
 ---
 
-## 🐛 Current Status (2025-11-25)
+## 🐛 Bugs Résolus (2025-12-02)
 
-### Issue: 0 Trades at Checkpoint 250K ❌
+### Bug 1 : Early Returns dans `_calculate_reward()` ✅ RÉSOLU
 
-**Symptoms**:
-- Total Trades: 0
-- Total Reward: +110,232 (positive but passive)
-- Actions: SELL 0%, HOLD 0%, BUY 0%
+**Problème** : Les `return` statements bypassaient le reward +5.0 pour les trades.
 
-**Hypotheses**:
-1. ⚠️ **Reward scale dilutes everything** (0.3× if 0 trades)
-2. 🔍 Demonstration Learning phase not detected
-3. ⚠️ Over-Trading Protection too strict (blocks first 10 steps)
-4. 🔍 Action Masking too aggressive
-5. 🔍 RSI thresholds still too narrow
+**Solution** : Changé tous les `return X` en `reward += X` pour accumuler.
 
-**Fixes Applied (Not Yet Tested)**:
-- [x] Trading Action Rewards +5.0 (protected at END)
-- [x] RSI thresholds widened (30/70 → 40/60)
-- [x] Rewards boosted (×2.5)
-- [ ] Reward scale = 1.0 in Phase 1 (pending)
-- [ ] Over-Trading Protection fix (pending)
+**Fichier** : `environment/trading_env.py`
 
-See [DIAGNOSTIC_URGENT.md](DIAGNOSTIC_URGENT.md) for detailed analysis.
+---
+
+### Bug 2 : prices_df utilisant mauvaises données ✅ RÉSOLU
+
+**Problème** : `df_full` ne contient que des colonnes `_close` (EURUSD ~$1.5), pas de vraies données OHLCV Gold.
+
+**Solution** : Utiliser `auxiliary_data['xauusd_raw']['H1']` pour les prix réels Gold (~$1000).
+
+**Fichiers** :
+- `analysis/interview_env_only.py`
+- `analysis/quick_diagnostic.py`
+- `training/train_smoke_test.py`
+
+---
+
+### Bug 3 : FIX 8 bloquant TOUS les trades ✅ RÉSOLU
+
+**Problème** : `last_trade_open_step` n'était pas reset dans `reset()`, causant des différences négatives :
+```
+current_step: 44290
+last_trade_open_step: 61667  (de l'épisode précédent!)
+Différence: -17377 bars
+-17377 < 10 = TRUE → TOUS LES TRADES BLOQUÉS
+```
+
+**Solution** : Ajouté dans `reset()` :
+```python
+self.last_trade_open_step = -10  # Allow first trade immediately
+self.position_opened_this_step = False
+self.position_closed_this_step = False
+self.last_closed_pnl = 0.0
+self.demonstration_trade_this_step = False
+```
+
+**Fichier** : `environment/trading_env.py` (lignes 398-407)
+
+---
+
+## 🔬 Scripts de Diagnostic
+
+### 1. Interview Trades (`analysis/interview_trades.py`)
+
+**Le plus complet** - Pose 5 questions critiques :
+
+| Question | But |
+|----------|-----|
+| Q1 | Les positions S'OUVRENT-elles ? |
+| Q2 | Le TP/SL est-il ATTEIGNABLE ? |
+| Q3 | Que se passe-t-il sur 100 steps ? |
+| Q4 | FIX 8 (Over-Trading) bloque-t-il ? |
+| Q5 | Simulation longue (500 steps) |
+
+```bash
+python analysis/interview_trades.py
+```
+**Durée** : ~3 minutes
+
+### 2. Interview Env Only (`analysis/interview_env_only.py`)
+
+Test l'environnement **sans modèle** - Vérifie fixes V2.7, rewards, `_open_position()`.
+
+### 3. Quick Diagnostic (`analysis/quick_diagnostic.py`)
+
+10 actions BUY manuelles + test direct `_open_position()`.
+
+### 4. Check Prices (`analysis/check_prices.py`)
+
+Vérifie que les prix sont bien Gold (~$800-2000) et pas EURUSD (~$1.5).
+
+---
+
+## 🔄 Workflow de Diagnostic
+
+```
+1. Problème détecté (0 trades)
+         ↓
+2. Lancer interview_trades.py
+         ↓
+3. Identifier la question qui échoue (Q1-Q5)
+         ↓
+4. Analyser le code source correspondant
+         ↓
+5. Appliquer le fix
+         ↓
+6. Relancer interview pour vérifier
+         ↓
+7. Lancer smoke test (10K steps)
+         ↓
+8. Si SUCCESS → Training complet (500K+ steps)
+```
+
+---
+
+## 📦 Repositories
+
+| Repo | Description |
+|------|-------------|
+| [AGENT-8-UNIQUEMENT-](https://github.com/tradingluca31-boop/AGENT-8-UNIQUEMENT-) | Code Agent 8 centralisé |
+| [AMELIORATION-AGENT-SCRIPT](https://github.com/tradingluca31-boop/AMELIORATION-AGENT-SCRIPT) | Scripts d'amélioration & diagnostic |
 
 ---
 
@@ -290,6 +375,6 @@ Trading financial instruments involves substantial risk of loss. Past performanc
 
 ---
 
-**Last Updated**: 2025-11-25
-**Version**: V2.7 NUCLEAR (7 fixes + 3 critical updates)
-**Status**: 🔥 Active Development - Resolving 0 trades issue
+**Last Updated**: 2025-12-02
+**Version**: V2.7 NUCLEAR (8 fixes - All bugs resolved)
+**Status**: ✅ All major bugs fixed - Ready for smoke test validation
