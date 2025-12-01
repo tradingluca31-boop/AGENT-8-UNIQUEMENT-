@@ -31,11 +31,20 @@ warnings.filterwarnings('ignore')
 # Add paths
 analysis_dir = Path(__file__).resolve().parent
 agent8_root = analysis_dir.parent
-project_root = agent8_root.parent.parent
 env_dir = agent8_root / "environment"
 
-sys.path.insert(0, str(env_dir))
-sys.path.append(str(project_root))
+# GoldRL paths (for data_loader, feature_engineering)
+goldrl_root = Path("C:/Users/lbye3/Desktop/GoldRL")
+goldrl_v2 = goldrl_root / "AGENT" / "AGENT 8" / "ALGO AGENT 8 RL" / "V2"
+
+# IMPORTANT: Order matters! Local env_dir FIRST, then GoldRL
+sys.path.insert(0, str(goldrl_root))
+sys.path.insert(0, str(goldrl_v2))
+sys.path.insert(0, str(env_dir))  # MUST BE FIRST for local trading_env.py
+
+# Output directory for checkpoints
+outputs_dir = agent8_root / "outputs"
+checkpoints_dir = outputs_dir / "checkpoints"
 
 print("=" * 80)
 print("INTERVIEW AGENT 8 - DIAGNOSTIC MODE COLLAPSE")
@@ -87,33 +96,34 @@ env = GoldTradingEnvAgent8(
 )
 print(f"       [OK] Environment created\n")
 
-# Load model
-print("[4/5] Loading V2.7 model...")
-checkpoint_path = v2_dir / 'checkpoints' / 'agent8_v2.7_checkpoint_250000_steps.zip'
+# Load model (OPTIONAL - Interview can work WITHOUT a trained model)
+print("[4/5] Looking for trained model...")
+model = None
+checkpoint_path = None
 
-if not checkpoint_path.exists():
-    print(f"       [ERROR] Checkpoint not found: {checkpoint_path}")
-    print(f"       Looking for alternative...")
-    # Try to find any V2.7 checkpoint
-    checkpoint_dir = v2_dir / 'checkpoints'
-    if checkpoint_dir.exists():
-        checkpoints = sorted(checkpoint_dir.glob('agent8_v2.7_checkpoint_*.zip'))
-        if checkpoints:
-            checkpoint_path = checkpoints[-1]  # Use latest
-            print(f"       [FOUND] Using: {checkpoint_path.name}")
-        else:
-            print(f"       [ERROR] No V2.7 checkpoints found!")
-            sys.exit(1)
-    else:
-        print(f"       [ERROR] Checkpoints directory doesn't exist!")
-        sys.exit(1)
+# Try multiple locations
+possible_locations = [
+    checkpoints_dir / 'agent8_checkpoint_250000_steps.zip',
+    checkpoints_dir / 'agent8_v2.7_checkpoint_250000_steps.zip',
+    outputs_dir / 'best_model.zip',
+    goldrl_v2 / 'checkpoints' / 'agent8_v2.7_checkpoint_250000_steps.zip',
+]
 
-try:
-    model = PPO.load(str(checkpoint_path))
-    print(f"       [OK] Model loaded: {checkpoint_path.name}\n")
-except Exception as e:
-    print(f"       [ERROR] Failed to load model: {e}")
-    sys.exit(1)
+for path in possible_locations:
+    if path.exists():
+        checkpoint_path = path
+        break
+
+if checkpoint_path:
+    try:
+        model = PPO.load(str(checkpoint_path))
+        print(f"       [OK] Model loaded: {checkpoint_path.name}\n")
+    except Exception as e:
+        print(f"       [WARNING] Failed to load model: {e}")
+        print(f"       [INFO] Interview will continue WITHOUT model (env-only diagnostic)\n")
+else:
+    print(f"       [INFO] No checkpoint found - Interview will test ENVIRONMENT ONLY")
+    print(f"       This is useful to verify the fixes in trading_env.py\n")
 
 # ================================================================================
 # INTERVIEW START

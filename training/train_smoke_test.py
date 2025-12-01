@@ -36,10 +36,11 @@ env_dir = agent8_root / "environment"
 goldrl_root = Path("C:/Users/lbye3/Desktop/GoldRL")
 goldrl_v2 = goldrl_root / "AGENT" / "AGENT 8" / "ALGO AGENT 8 RL" / "V2"
 
-sys.path.insert(0, str(env_dir))
-sys.path.insert(0, str(training_dir))
-sys.path.insert(0, str(goldrl_v2))
+# IMPORTANT: Order matters! Local env_dir FIRST, then GoldRL
 sys.path.insert(0, str(goldrl_root))
+sys.path.insert(0, str(goldrl_v2))
+sys.path.insert(0, str(training_dir))
+sys.path.insert(0, str(env_dir))  # MUST BE FIRST for local trading_env.py
 
 print("="*80)
 print("AGENT 8 - SMOKE TEST (10K steps)")
@@ -131,13 +132,19 @@ for tf in ['D1', 'H1', 'M15']:
                (auxiliary_data['xauusd_raw'][tf].index <= HYPERPARAMS['train_end'])
         auxiliary_data['xauusd_raw'][tf] = auxiliary_data['xauusd_raw'][tf].loc[mask]
 
-# Extract OHLCV
-ohlcv_cols = [col for col in df_train.columns if any(x in col.lower() for x in ['open', 'high', 'low', 'close', 'volume'])]
-prices_df = df_train[ohlcv_cols[:5]].copy()
-prices_df.columns = ['open', 'high', 'low', 'close', 'volume']
-
-# Calculate features
+# Calculate features FIRST (to get the aligned index)
 features_df = calculate_all_features(df_train, auxiliary_data)
+
+# FIX: Use RAW XAUUSD H1 data for prices (has real OHLCV: open, high, low, close, volume)
+# The df_train only contains _close columns from different assets, NOT real OHLCV!
+# This was causing TP/SL to never trigger because prices were wrong (EURUSD ~1.5 instead of GOLD ~2000)
+prices_raw = auxiliary_data['xauusd_raw']['H1'].loc[HYPERPARAMS['train_start']:HYPERPARAMS['train_end']].copy()
+
+# Align prices_df with features_df (same index)
+common_index = features_df.index.intersection(prices_raw.index)
+prices_df = prices_raw.loc[common_index]
+features_df = features_df.loc[common_index]
+print(f"           [PRICES] Using raw XAUUSD H1 - Close sample: ${prices_df['close'].iloc[1000]:.2f}")
 
 load_time = time.time() - start_load
 print(f"           [OK] Data loaded in {load_time:.1f}s")
@@ -156,10 +163,9 @@ env = GoldTradingEnvAgent8(
     features_df=features_df,
     prices_df=prices_df,
     initial_balance=100_000.0,
-    max_position_size=1.0,
-    transaction_cost=0.0001,
+    max_episode_steps=5000,
     verbose=False,
-    global_timestep=0
+    training_mode=True
 )
 
 print(f"           [OK] Environment created")

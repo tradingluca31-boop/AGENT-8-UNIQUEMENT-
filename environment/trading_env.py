@@ -933,6 +933,7 @@ class GoldTradingEnvAgent8(gym.Env):
 
         # FIX V2.1: Reward intermédiaire pour diversité (même sans trade fermé)
         # Encourage exploration et empêche mode collapse
+        # NOTE: DO NOT return early! Must continue to add trading_action_reward at the end!
         if len(self.trades) < 1:
             # Reward basé sur diversité d'actions récentes
             if len(self.recent_actions) >= 5:
@@ -946,9 +947,7 @@ class GoldTradingEnvAgent8(gym.Env):
                 if max_action_pct < 0.6:  # <60% single action = good diversity
                     diversity_reward += 0.15  # Bonus (×3 stronger)
 
-                return diversity_reward
-            else:
-                return 0.0  # Still building history
+                reward += diversity_reward  # FIX: Accumulate instead of early return!
 
         # FIX V2.4: PASSIVITY PENALTY (100% HOLD)
         # Si agent refuse de trader après 100 steps → PENALTY MASSIVE
@@ -959,7 +958,7 @@ class GoldTradingEnvAgent8(gym.Env):
 
                 if hold_pct > 0.75:  # >75% HOLD et 0 trades
                     passivity_penalty = -5.0  # TRÈS FORTE
-                    return passivity_penalty
+                    reward += passivity_penalty  # FIX: Accumulate instead of early return!
 
         # FIX V2.3: NO 5 CONSECUTIVE SAME ACTIONS
         # Empêche répétitions mais trop faible
@@ -969,7 +968,7 @@ class GoldTradingEnvAgent8(gym.Env):
             # Si 5 actions consécutives identiques → penalty
             if len(set(last_5)) == 1:  # All same action
                 repetition_penalty = -0.50  # Augmenté de 0.30 → 0.50
-                return repetition_penalty
+                reward += repetition_penalty  # FIX: Accumulate instead of early return!
 
         # Progressive reward scaling based on trade count
         if len(self.trades) == 1:
