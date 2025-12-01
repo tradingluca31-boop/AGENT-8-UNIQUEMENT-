@@ -30,12 +30,16 @@ warnings.filterwarnings('ignore')
 # Add paths
 training_dir = Path(__file__).resolve().parent
 agent8_root = training_dir.parent
-project_root = agent8_root.parent.parent
 env_dir = agent8_root / "environment"
+
+# GoldRL paths (where data_loader, feature_engineering, config are)
+goldrl_root = Path("C:/Users/lbye3/Desktop/GoldRL")
+goldrl_v2 = goldrl_root / "AGENT" / "AGENT 8" / "ALGO AGENT 8 RL" / "V2"
 
 sys.path.insert(0, str(env_dir))
 sys.path.insert(0, str(training_dir))
-sys.path.append(str(project_root))
+sys.path.insert(0, str(goldrl_v2))
+sys.path.insert(0, str(goldrl_root))
 
 print("="*80)
 print("AGENT 8 - SMOKE TEST (10K steps)")
