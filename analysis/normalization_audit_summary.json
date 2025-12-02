@@ -1,0 +1,30 @@
+{
+  "date": "2025-12-02T05:07:24.494396",
+  "total_features": 209,
+  "ok_count": 162,
+  "needs_norm_count": 47,
+  "critical_count": 31,
+  "verdict": "CRITICAL",
+  "critical_features": [
+    "xauusd_d1_volume_sma_20",
+    "xauusd_h1_volume_sma_20",
+    "xauusd_m15_volume_sma_20",
+    "xauusd_m15_ema_12",
+    "xauusd_m15_sma_20",
+    "xauusd_m15_ema_26",
+    "xauusd_h1_ema_12",
+    "xauusd_m15_sma_50",
+    "xauusd_h1_sma_20",
+    "xauusd_h1_ema_26",
+    "xauusd_h1_sma_50",
+    "xauusd_m15_sma_200",
+    "xauusd_h1_sma_200",
+    "xauusd_d1_ema_12",
+    "xauusd_d1_sma_20",
+    "xauusd_d1_ema_26",
+    "xauusd_d1_sma_50",
+    "xauusd_d1_sma_200",
+    "chf_h1_index_value",
+    "jpy_h1_index_value"
+  ]
+}
