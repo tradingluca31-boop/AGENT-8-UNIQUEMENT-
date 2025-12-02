@@ -452,6 +452,14 @@ Trading financial instruments involves substantial risk of loss. Past performanc
 
 ## 📜 Changelog
 
+### [2025-12-02] - Session 3
+- ✅ **ADD** `analysis/normalization_audit.py` - Audit Wall Street grade (47 features à normaliser)
+- ✅ **ADD** 7 MEMORY features dans `trading_env.py` (like Agent 7)
+  - win_rate, streak, avg_pnl, best, worst, win_count, loss_count
+- ✅ **ADD** `analysis/normalization_audit_summary.json` - Résultats audit
+- 🔍 **DIAGNOSTIC** 31 features CRITIQUES identifiées (prix raw 0-2000)
+- 📊 **Observation space**: 209 base + 20 RL = **229 features** total
+
 ### [2025-12-02] - Session 2
 - ✅ **ADD** `analysis/behavioral_analysis.py` - Psychanalyse de l'agent (8 questions)
 - ✅ **ADD** `analysis/check_qvalues.py` - Vérification Q-values/Policy output
@@ -476,5 +484,5 @@ Trading financial instruments involves substantial risk of loss. Past performanc
 ---
 
 **Last Updated**: 2025-12-02
-**Version**: V2.7 NUCLEAR (8 fixes - All bugs resolved)
-**Status**: ✅ All major bugs fixed - Ready for smoke test validation
+**Version**: V2.8 MEMORY (229 features - 7 MEMORY + normalization audit)
+**Status**: ⚠️ Normalization fix pending - 47 features need Wall Street grade normalization
