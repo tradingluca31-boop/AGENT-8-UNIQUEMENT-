@@ -117,7 +117,7 @@ class GoldTradingEnvAgent8(gym.Env):
     """
     Environnement Gymnasium pour trading Gold - AGENT 8 MEAN REVERSION (SAC)
 
-    Observation space: Box(221,) - 209 base features (199+10 temporal V3) + 12 RL features
+    Observation space: Box(229,) - 209 base features (199+10 temporal V3) + 20 RL features (13 original + 7 MEMORY)
     Action space: Box([-1, 1]) - Continuous (SAC compatible)
         - action[0]: direction (-1=SELL, 0=HOLD, +1=BUY)
 
@@ -166,9 +166,10 @@ class GoldTradingEnvAgent8(gym.Env):
 
         self.total_steps = len(self.features_df)
 
-        # Observation space: 209 base (199+10 temporal V3) + 13 RL = 222 features
+        # Observation space: 209 base (199+10 temporal V3) + 20 RL = 229 features
+        # RL features: 13 original + 7 MEMORY features (like Agent 7)
         n_base_features = self.features_df.shape[1]  # Should be 209 (199+10 temporal V3)
-        n_rl_features = 13  # 13 RL-specific features (including trade_similarity_score)
+        n_rl_features = 20  # 13 RL-specific + 7 MEMORY features
         n_total_features = n_base_features + n_rl_features
 
         self.observation_space = spaces.Box(
@@ -2072,11 +2073,11 @@ class GoldTradingEnvAgent8(gym.Env):
             return max(1.0, atr)
 
     def _get_observation(self) -> np.ndarray:
-        """Get current observation (209 base + 13 RL = 222 features)"""
+        """Get current observation (209 base + 20 RL = 229 features)"""
         # Base features (209 = 199 + 10 temporal V3)
         base_features = self.features_df.iloc[self.current_step].values.astype(np.float32)
 
-        # RL features (13)
+        # RL features (20 = 13 original + 7 MEMORY)
         rl_features = []
 
         # 1-5. Last 5 actions (one-hot or normalized)
@@ -2109,6 +2110,66 @@ class GoldTradingEnvAgent8(gym.Env):
 
         # 13. Trade similarity score (pattern memory)
         rl_features.append(self.trade_similarity_score)
+
+        # =====================================================================
+        # 14-20. MEMORY FEATURES (7 features - like Agent 7)
+        # =====================================================================
+
+        # Calculate memory stats from trades history
+        if len(self.trades) > 0:
+            pnls = [t.get('pnl', 0) for t in self.trades]
+            wins = [p for p in pnls if p > 0]
+            losses = [p for p in pnls if p <= 0]
+
+            # 14. Win rate (0-1)
+            win_rate = len(wins) / len(self.trades)
+            rl_features.append(win_rate)
+
+            # 15. Streak (normalized: positive=wins, negative=losses, /10 for scale)
+            streak = 0
+            for pnl in reversed(pnls):
+                if pnl > 0:
+                    if streak >= 0:
+                        streak += 1
+                    else:
+                        break
+                else:
+                    if streak <= 0:
+                        streak -= 1
+                    else:
+                        break
+            rl_features.append(streak / 10.0)  # Normalize to ~[-1, 1]
+
+            # 16. Average PnL (normalized by initial balance)
+            avg_pnl = np.mean(pnls) / self.initial_balance * 100  # As percentage
+            rl_features.append(np.clip(avg_pnl, -10, 10))  # Clip to [-10, 10]
+
+            # 17. Best trade (normalized by initial balance)
+            best_trade = max(pnls) / self.initial_balance * 100
+            rl_features.append(np.clip(best_trade, 0, 10))  # Clip to [0, 10]
+
+            # 18. Worst trade (normalized by initial balance)
+            worst_trade = min(pnls) / self.initial_balance * 100
+            rl_features.append(np.clip(worst_trade, -10, 0))  # Clip to [-10, 0]
+
+            # 19. Win count (normalized by log scale)
+            win_count = len(wins)
+            rl_features.append(np.log1p(win_count) / 5.0)  # log(1+x)/5 for scale
+
+            # 20. Loss count (normalized by log scale)
+            loss_count = len(losses)
+            rl_features.append(np.log1p(loss_count) / 5.0)  # log(1+x)/5 for scale
+        else:
+            # No trades yet - use defaults
+            rl_features.extend([
+                0.5,   # 14. win_rate (neutral)
+                0.0,   # 15. streak (no streak)
+                0.0,   # 16. avg_pnl (0)
+                0.0,   # 17. best (no trades)
+                0.0,   # 18. worst (no trades)
+                0.0,   # 19. win_count (0)
+                0.0,   # 20. loss_count (0)
+            ])
 
         # Combine
         rl_features_array = np.array(rl_features, dtype=np.float32)
