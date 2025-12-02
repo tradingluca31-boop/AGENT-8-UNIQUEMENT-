@@ -294,6 +294,79 @@ Test l'environnement **sans modèle** - Vérifie fixes V2.7, rewards, `_open_pos
 
 Vérifie que les prix sont bien Gold (~$800-2000) et pas EURUSD (~$1.5).
 
+### 5. Behavioral Analysis (`analysis/behavioral_analysis.py`) 🆕
+
+**Psychanalyse de l'agent** - 8 questions comportementales :
+
+| Question | Analyse |
+|----------|---------|
+| Q1 | Distribution des actions (BUY/SELL/HOLD %) |
+| Q2 | Peur du risque? (préfère HOLD vs trade) |
+| Q3 | Ferme-t-il ses positions? |
+| Q4 | Rewards reçus (positifs/négatifs) |
+| Q5 | Contexte marché quand il trade |
+| Q6 | Ce qu'il "voit" (observations) |
+| Q7 | Évolution sur 1000 steps |
+| Q8 | Synthèse + hypothèses |
+
+```bash
+python analysis/behavioral_analysis.py
+```
+**Durée** : ~5 minutes
+**Output** : Diagnostic comportemental avec profil (PASSIF/ACTIF/BLOQUÉ) et recommandations
+
+### 6. Check Q-Values / Policy (`analysis/check_qvalues.py`) 🆕
+
+**Regarde ce que l'agent "pense"** - Probabilités d'action du policy network :
+
+```bash
+python analysis/check_qvalues.py
+python analysis/check_qvalues.py --model models/best_model.zip
+python analysis/check_qvalues.py --n_samples 100
+```
+
+**Diagnostics**:
+- Si P(HOLD) >> P(BUY) et P(SELL) → L'agent a appris que ne rien faire est "safe"
+- Calcul de l'entropy pour vérifier exploration
+- Mode collapse detection
+
+### 7. Check Reward Function (`analysis/check_reward_function.py`) 🆕
+
+**Checklist reward function** - 4 questions critiques :
+
+| Question | Check |
+|----------|-------|
+| A | HOLD donne-t-il un reward (même petit)? |
+| B | Trades perdants TROP pénalisés? |
+| C | Reward UNIQUEMENT à la clôture? |
+| D | Risk/Reward encouragé? |
+
+```bash
+python analysis/check_reward_function.py
+```
+
+**PIÈGE CLASSIQUE détecté** : Si reward qu'à clôture + pertes pénalisées → Agent apprend "ne jamais ouvrir = jamais de perte = SAFE"
+
+### 8. Full Diagnostic (`analysis/full_diagnostic.py`) 🆕
+
+**Diagnostic COMPLET** - 6 tests en un script :
+
+| Test | Description |
+|------|-------------|
+| 1 | Distribution des actions (HOLD/BUY/SELL %) |
+| 2 | Random vs Trained comparison |
+| 3 | Observations normalization check |
+| 4 | Reward per action type |
+| 5 | Exploration (entropy) analysis |
+| 6 | Positions analysis |
+
+```bash
+python analysis/full_diagnostic.py
+python analysis/full_diagnostic.py --model models/best_model.zip --episodes 20
+```
+
+**Output** : Synthèse avec problèmes détectés + solutions recommandées
+
 ---
 
 ## 🔄 Workflow de Diagnostic
@@ -372,6 +445,33 @@ For questions, feedback, or collaboration:
 Trading financial instruments involves substantial risk of loss. Past performance is not indicative of future results. This agent is **experimental** and should **NOT** be used with real money without extensive testing, validation, and understanding of the risks involved.
 
 **Use at your own risk. The authors assume no responsibility for financial losses.**
+
+---
+
+---
+
+## 📜 Changelog
+
+### [2025-12-02] - Session 2
+- ✅ **ADD** `analysis/behavioral_analysis.py` - Psychanalyse de l'agent (8 questions)
+- ✅ **ADD** `analysis/check_qvalues.py` - Vérification Q-values/Policy output
+- ✅ **ADD** `analysis/check_reward_function.py` - Checklist reward function (4 questions)
+- ✅ **ADD** `analysis/full_diagnostic.py` - Diagnostic COMPLET (6 tests)
+- ✅ **FIX** Bug 3 - FIX 8 reset (`last_trade_open_step` non reset dans `reset()`)
+- ✅ **VERIFIED** Interview trades: 50 positions ouvertes, 48 fermées
+
+### [2025-12-02] - Session 1
+- ✅ **FIX** Bug 1 - Early returns dans `_calculate_reward()` bypassaient rewards +5.0
+- ✅ **FIX** Bug 2 - `prices_df` utilisait EURUSD (~$1.5) au lieu de Gold (~$2000)
+- ✅ **ADD** `analysis/interview_trades.py` - Diagnostic 5 questions
+- ✅ **ADD** `analysis/interview_env_only.py` - Test environnement sans modèle
+- ✅ **ADD** `analysis/quick_diagnostic.py` - Test rapide 10 actions
+- ✅ **ADD** `analysis/check_prices.py` - Vérification prix Gold vs EURUSD
+
+### [2025-12-01] - Initial Setup
+- 🚀 **INIT** Structure projet Agent 8
+- 📦 **ADD** `environment/trading_env.py` - GoldTradingEnvAgent8 V2.7
+- 📦 **ADD** `training/train_smoke_test.py` - Smoke test 10K steps
 
 ---
 
