@@ -718,12 +718,12 @@ class GoldTradingEnvAgent8(gym.Env):
         if self.position_side != 0:
             return  # Already in position
 
-        # FIX 8 V2.7 NUCLEAR: Over-Trading Protection (max 1 trade per 10 bars)
-        # Prevents reward hacking by opening/closing rapidly
-        if self.current_step - self.last_trade_open_step < 10:
+        # FIX 8 OPTION 2: Over-Trading Protection (max 1 trade per 3 bars)
+        # REDUCED from 10 to 3 bars - Mean Reversion M15 needs reactivity
+        if self.current_step - self.last_trade_open_step < 3:
             if self.verbose:
                 bars_since = self.current_step - self.last_trade_open_step
-                self.log(f"   [FIX 8 V2.7] Over-trading blocked: Only {bars_since} bars since last trade (min 10)")
+                self.log(f"   [FIX 8 OPTION 2] Over-trading blocked: Only {bars_since} bars since last trade (min 3)")
             return  # Block trade
 
         # Get ATR for SL calculation
@@ -983,10 +983,11 @@ class GoldTradingEnvAgent8(gym.Env):
                 if self.verbose:
                     self.log(f"   [FIX 1 V2.7] Profitable close (${self.last_closed_pnl:+.2f}) → +5.0 reward")
             else:
-                # Losing close = -1.0 (still positive overall when combined with +5.0 open)
-                trading_action_reward -= 1.0
+                # FIX D2: Losing close = -7.0 (AGGRESSIVE - Loss total = -2.0)
+                # This creates CLEAR signal: Win (+10.0) vs Loss (-2.0)
+                trading_action_reward -= 7.0
                 if self.verbose:
-                    self.log(f"   [FIX 1 V2.7] Losing close (${self.last_closed_pnl:+.2f}) → -1.0 reward")
+                    self.log(f"   [FIX D2] Losing close (${self.last_closed_pnl:+.2f}) → -7.0 reward (Loss total = -2.0)")
 
         # NOTE: trading_action_reward is NOT added here (will be added at END after scaling)
 
@@ -1006,7 +1007,7 @@ class GoldTradingEnvAgent8(gym.Env):
             elif current_phase == 2:
                 demonstration_bonus = 5.0   # Large bonus Phase 2
             elif current_phase == 3:
-                demonstration_bonus = 2.0   # Moderate bonus Phase 3
+                demonstration_bonus = 5.0   # OPTION 2: BOOSTED from 2.0 to 5.0 (we're at 500K now!)
 
             if demonstration_bonus > 0 and self.verbose:
                 self.log(f"   [FIX 5 V2.7] Demonstration trade bonus: +{demonstration_bonus:.1f}")
@@ -1052,13 +1053,10 @@ class GoldTradingEnvAgent8(gym.Env):
                 repetition_penalty = -0.50  # Augmenté de 0.30 → 0.50
                 reward += repetition_penalty  # FIX: Accumulate instead of early return!
 
-        # Progressive reward scaling based on trade count
-        if len(self.trades) == 1:
-            reward_scale = 0.3  # 30% of full reward (learning phase)
-        elif len(self.trades) == 2:
-            reward_scale = 0.6  # 60% of full reward (growing confidence)
-        else:  # 3+ trades
-            reward_scale = 1.0  # 100% full reward (mature trading)
+        # OPTION 2: REMOVE progressive scaling - Stop diluting signals!
+        # Was: 0.3 for 1st trade, 0.6 for 2nd, 1.0 for 3+
+        # Now: ALWAYS 1.0 (full reward from first trade)
+        reward_scale = 1.0  # OPTION 2: Always full reward (no dilution)
 
         # TIER 1: Core Performance (70%)
         # 1.1 Profit (40%) - AMPLIFIED REWARD FOR WINNERS

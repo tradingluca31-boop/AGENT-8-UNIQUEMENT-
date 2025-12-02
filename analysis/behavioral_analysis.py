@@ -65,6 +65,29 @@ except ImportError:
     print("       [WARNING] SB3 not available - will use random actions")
     PPO = None
 
+# Load trained model
+model = None
+model_path = agent8_root / "models" / "agent8_500k_final.zip"
+if PPO is not None and model_path.exists():
+    print(f"       [LOADING] Model from: {model_path.name}")
+    try:
+        model = PPO.load(str(model_path))
+        print("       [OK] Model loaded successfully!")
+    except Exception as e:
+        print(f"       [ERROR] Failed to load model: {e}")
+        model = None
+else:
+    print(f"       [WARNING] Model not found at: {model_path}")
+    print("       [WARNING] Will use RANDOM actions as baseline")
+
+def get_action(model, obs):
+    """Get action from model or random"""
+    if model is not None:
+        action, _ = model.predict(obs, deterministic=True)
+        return int(action)
+    else:
+        return np.random.choice([0, 1, 2])
+
 print()
 
 # ================================================================================
@@ -118,19 +141,20 @@ obs, _ = env.reset()
 if hasattr(env, 'set_global_timestep'):
     env.set_global_timestep(50000)
 
-# Simulate 1000 steps with random actions (or model if available)
+# Simulate 1000 steps with MODEL or random actions
 action_counts = {0: 0, 1: 0, 2: 0}  # SELL, HOLD, BUY
 action_names = {0: "SELL", 1: "HOLD", 2: "BUY"}
 
 for _ in range(1000):
-    action = np.random.choice([0, 1, 2])
+    action = get_action(model, obs)
     obs, reward, done, truncated, info = env.step(action)
     action_counts[action] += 1
     if done or truncated:
         obs, _ = env.reset()
 
 total = sum(action_counts.values())
-print("Distribution avec actions RANDOM (baseline):")
+mode_str = "MODEL 500K" if model is not None else "RANDOM (baseline)"
+print(f"Distribution avec actions {mode_str}:")
 for action, count in action_counts.items():
     pct = (count / total) * 100
     bar = "█" * int(pct / 2)
@@ -162,8 +186,7 @@ holds_after_trade = []  # HOLDs immediately after a trade action
 
 last_action = None
 for i in range(500):
-    # Random action for now (or use model)
-    action = np.random.choice([0, 1, 2])
+    action = get_action(model, obs)
     obs, reward, done, truncated, info = env.step(action)
 
     total_steps += 1
@@ -215,7 +238,7 @@ position_durations = []
 current_position_start = None
 
 for i in range(1000):
-    action = np.random.choice([0, 1, 2])
+    action = get_action(model, obs)
     obs, reward, done, truncated, info = env.step(action)
 
     if env.position_opened_this_step:
@@ -268,7 +291,7 @@ env.set_global_timestep(50000)
 rewards_by_action = {0: [], 1: [], 2: []}  # SELL, HOLD, BUY
 
 for i in range(500):
-    action = np.random.choice([0, 1, 2])
+    action = get_action(model, obs)
     obs, reward, done, truncated, info = env.step(action)
     rewards_by_action[action].append(reward)
 
@@ -312,7 +335,7 @@ env.set_global_timestep(50000)
 open_contexts = []  # Store features when position opens
 
 for i in range(1000):
-    action = np.random.choice([0, 1, 2])
+    action = get_action(model, obs)
 
     # Get features BEFORE step
     current_features = env.features_df.iloc[env.current_step]
@@ -422,7 +445,7 @@ for window in range(5):  # 5 windows of 100 steps
     window_trades = 0
 
     for _ in range(window_size):
-        action = np.random.choice([0, 1, 2])
+        action = get_action(model, obs)
         obs, reward, done, truncated, info = env.step(action)
         window_actions[action] += 1
         if env.position_opened_this_step:

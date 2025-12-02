@@ -35,17 +35,26 @@ import time
 import warnings
 warnings.filterwarnings('ignore')
 
-# Add paths
-v2_dir = Path(__file__).resolve().parent
-project_root = v2_dir.parent.parent.parent.parent
-sys.path.insert(0, str(v2_dir))
-sys.path.append(str(project_root))
+# Add paths - AGENT 8 CENTRALIZED STRUCTURE
+training_dir = Path(__file__).resolve().parent
+agent8_root = training_dir.parent
+env_dir = agent8_root / "environment"
+models_dir = agent8_root / "models"
+v2_dir = training_dir  # Output directory for checkpoints and logs
+goldrl_root = Path("C:/Users/lbye3/Desktop/GoldRL")
+goldrl_v2 = goldrl_root / "AGENT" / "AGENT 8" / "ALGO AGENT 8 RL" / "V2"
+
+# Priority: 1) environment folder (AGENT 8 UNIQUEMENT), 2) V2 folder, 3) GoldRL root
+# Note: insert(0) puts at front, so insert in REVERSE order of priority
+sys.path.insert(0, str(goldrl_root))   # 3rd priority
+sys.path.insert(0, str(goldrl_v2))     # 2nd priority
+sys.path.insert(0, str(env_dir))       # 1st priority (searched first)
 
 print("="*80)
-print("AGENT 8 V2.7 NUCLEAR - MODE COLLAPSE FIX (500K VALIDATION)")
+print("AGENT 8 V2.9 NORMALIZED - 500K TRAINING")
 print("="*80)
 print(f"Start Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-print(f"Working Directory: {v2_dir}")
+print(f"Working Directory: {training_dir}")
 print("="*80)
 print()
 
@@ -55,20 +64,18 @@ print()
 
 print("[STEP 1/8] Importing modules...")
 
-# Add environment folder to path
-env_dir = project_root / "AGENT 8 UNIQUEMENT" / "environment"
-sys.path.insert(0, str(env_dir))
-
 try:
-    import config_features as config
-    from config_csv_export import CSV_OUTPUT_DIR
-    from csv_exporter import CSVExporter
-    from trading_env import GoldTradingEnvAgent8  # Environment centralisé
+    # Environment from AGENT 8 UNIQUEMENT/environment/
+    from trading_env import GoldTradingEnvAgent8
+    print("           [OK] trading_env imported from environment/")
+
+    # Data loader and feature engineering from GoldRL V2 folder
     from data_loader import load_data_agent8
     from feature_engineering import calculate_all_features
-    print("           [OK] All imports successful")
+    print("           [OK] data_loader + feature_engineering imported from V2/")
 except ImportError as e:
     print(f"           [ERROR] Import failed: {e}")
+    print(f"           [DEBUG] sys.path = {sys.path[:5]}")
     import traceback
     traceback.print_exc()
     sys.exit(1)
@@ -108,8 +115,8 @@ HYPERPARAMS = {
     'gamma': 0.99,
     'gae_lambda': 0.95,
     'clip_range': 0.2,
-    'ent_coef_start': 0.40,  # V2.7: Start high (exploration)
-    'ent_coef_end': 0.20,    # V2.7: End moderate (not 0.10!)
+    'ent_coef_start': 0.80,  # OPTION 2: DOUBLED for max exploration (was 0.40)
+    'ent_coef_end': 0.40,    # OPTION 2: DOUBLED to maintain diversity (was 0.20)
     'vf_coef': 0.5,
     'max_grad_norm': 0.5,
     'policy_kwargs': {'net_arch': [256, 256]},  # Agent 8 architecture
@@ -219,10 +226,9 @@ class CheckpointCSVCallback(BaseCallback):
     V2.7: Includes action distribution to monitor mode collapse fix
     """
 
-    def __init__(self, checkpoint_freq: int, csv_exporter: CSVExporter, env_ref, verbose: int = 1):
+    def __init__(self, checkpoint_freq: int, env_ref, verbose: int = 1):
         super().__init__(verbose)
         self.checkpoint_freq = checkpoint_freq
-        self.csv_exporter = csv_exporter
         self.env_ref = env_ref
         self.episode_rewards = []
         self.episode_lengths = []
@@ -387,7 +393,7 @@ for tf in ['D1', 'H1', 'M15']:
             HYPERPARAMS['train_start']:HYPERPARAMS['train_end']
         ]
         filtered_len = len(auxiliary_data['xauusd_raw'][tf])
-        print(f"             Filtered XAUUSD {tf}: {original_len} → {filtered_len} bars")
+        print(f"             Filtered XAUUSD {tf}: {original_len} -> {filtered_len} bars")
 
 print(f"             AFTER filter:  {df_full.shape[0]} bars (train only)")
 print(f"             Training period: {HYPERPARAMS['train_start']} to {HYPERPARAMS['train_end']}")
@@ -461,9 +467,6 @@ print()
 
 print("[STEP 6/8] Creating V2.7 callbacks...")
 
-# CSV Exporter
-csv_exporter = CSVExporter()
-
 # Checkpoint callback
 checkpoint_callback = CheckpointCallback(
     save_freq=HYPERPARAMS['checkpoint_freq'],
@@ -476,7 +479,6 @@ checkpoint_callback = CheckpointCallback(
 # CSV snapshot callback
 csv_callback = CheckpointCSVCallback(
     checkpoint_freq=HYPERPARAMS['checkpoint_freq'],
-    csv_exporter=csv_exporter,
     env_ref=env,
     verbose=1
 )
@@ -553,10 +555,11 @@ except KeyboardInterrupt:
 # ================================================================================
 
 print("[STEP 7/8] Saving final model...")
-final_model_path = v2_dir / 'checkpoints' / 'agent8_v2.7_500k_final.zip'
+final_model_path = models_dir / 'agent8_500k_final.zip'
 final_model_path.parent.mkdir(parents=True, exist_ok=True)
 model.save(str(final_model_path))
-print(f"           [OK] Model saved: {final_model_path.name}")
+print(f"           [OK] Model saved: {final_model_path}")
+print(f"           [OK] Checkpoints: {v2_dir / 'checkpoints'}")
 print()
 
 # ================================================================================
@@ -600,23 +603,23 @@ else:
     action_buy_pct = 0.0
 
 final_summary = {
-    'training_timesteps': HYPERPARAMS['total_timesteps'],
-    'training_duration_hours': training_duration,
-    'final_balance': final_balance,
-    'initial_balance': initial_balance,
-    'roi_pct': roi_pct,
-    'total_trades': total_trades,
-    'win_rate': win_rate,
-    'max_drawdown': max_dd,
-    'ftmo_compliant': max_dd < 0.10,
+    'training_timesteps': int(HYPERPARAMS['total_timesteps']),
+    'training_duration_hours': float(training_duration),
+    'final_balance': float(final_balance),
+    'initial_balance': float(initial_balance),
+    'roi_pct': float(roi_pct),
+    'total_trades': int(total_trades),
+    'win_rate': float(win_rate),
+    'max_drawdown': float(max_dd),
+    'ftmo_compliant': bool(max_dd < 0.10),
     'algorithm': 'PPO',
-    'version': 'V2.7 NUCLEAR',
+    'version': 'V2.9 NORMALIZED',
     'action_distribution': {
-        'sell_pct': action_sell_pct,
-        'hold_pct': action_hold_pct,
-        'buy_pct': action_buy_pct
+        'sell_pct': float(action_sell_pct),
+        'hold_pct': float(action_hold_pct),
+        'buy_pct': float(action_buy_pct)
     },
-    'entropy_schedule': f"{HYPERPARAMS['ent_coef_start']} → {HYPERPARAMS['ent_coef_end']}",
+    'entropy_schedule': f"{HYPERPARAMS['ent_coef_start']} -> {HYPERPARAMS['ent_coef_end']}",
     'fixes_applied': 7
 }
 
