@@ -457,6 +457,12 @@ Trading financial instruments involves substantial risk of loss. Past performanc
 - ✅ **ADD** 7 MEMORY features dans `trading_env.py` (like Agent 7)
   - win_rate, streak, avg_pnl, best, worst, win_count, loss_count
 - ✅ **ADD** `analysis/normalization_audit_summary.json` - Résultats audit
+- ✅ **FIX** `normalize_features_wallstreet()` - Normalisation automatique dans trading_env.py
+  - PRICE RAW: Min-Max [0, 1]
+  - RSI/Stoch: Divide by 100
+  - VOLUME: Log + Z-score [-3, 3]
+  - ATR: Percentile rank [0, 1]
+  - MACD/ADX: Z-score [-3, 3]
 - 🔍 **DIAGNOSTIC** 31 features CRITIQUES identifiées (prix raw 0-2000)
 - 📊 **Observation space**: 209 base + 20 RL = **229 features** total
 
@@ -484,5 +490,5 @@ Trading financial instruments involves substantial risk of loss. Past performanc
 ---
 
 **Last Updated**: 2025-12-02
-**Version**: V2.8 MEMORY (229 features - 7 MEMORY + normalization audit)
-**Status**: ⚠️ Normalization fix pending - 47 features need Wall Street grade normalization
+**Version**: V2.9 NORMALIZED (229 features - Wall Street grade normalization applied)
+**Status**: ✅ Ready for training - All features normalized automatically

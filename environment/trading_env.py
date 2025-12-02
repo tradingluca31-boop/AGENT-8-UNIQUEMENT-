@@ -113,6 +113,74 @@ from collections import deque, Counter
 from scipy import stats
 
 
+# =============================================================================
+# WALL STREET GRADE NORMALIZATION (Added 2025-12-02)
+# =============================================================================
+
+def normalize_features_wallstreet(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Wall Street Grade Feature Normalization
+    Transforms ALL features to appropriate ranges for neural networks.
+
+    Normalizations applied:
+    - PRICE RAW: Min-Max to [0, 1]
+    - PERCENTAGE (RSI, Stoch): Divide by 100
+    - VOLUME: Log + Z-score clipped [-3, 3]
+    - ATR/VOLATILITY: Percentile rank [0, 1]
+    - OSCILLATORS (MACD, ADX): Z-score clipped [-3, 3]
+    - FINAL SAFETY: Everything clipped to [-10, 10]
+    """
+    df_norm = df.copy()
+
+    # 1. PRICE RAW FEATURES -> Min-Max to [0, 1]
+    price_cols = [c for c in df.columns if any(p in c.lower() for p in ['close', 'open', 'high', 'low', 'sma_', 'ema_', 'index_value'])]
+    for col in price_cols:
+        if col in df_norm.columns:
+            min_val = df_norm[col].min()
+            max_val = df_norm[col].max()
+            if max_val > min_val:
+                df_norm[col] = (df_norm[col] - min_val) / (max_val - min_val)
+
+    # 2. PERCENTAGE FEATURES -> Divide by 100
+    pct_cols = [c for c in df.columns if any(p in c.lower() for p in ['rsi_', 'stochastic_', 'mfi_', 'williams_r'])]
+    for col in pct_cols:
+        if col in df_norm.columns:
+            df_norm[col] = df_norm[col] / 100.0
+
+    # 3. VOLUME FEATURES -> Log + Z-score
+    vol_cols = [c for c in df.columns if 'volume' in c.lower() and 'ratio' not in c.lower()]
+    for col in vol_cols:
+        if col in df_norm.columns:
+            df_norm[col] = np.log1p(df_norm[col])
+            mean_val = df_norm[col].mean()
+            std_val = df_norm[col].std()
+            if std_val > 0:
+                df_norm[col] = (df_norm[col] - mean_val) / std_val
+                df_norm[col] = df_norm[col].clip(-3, 3)
+
+    # 4. ATR/VOLATILITY -> Percentile rank [0, 1]
+    atr_cols = [c for c in df.columns if 'atr_' in c.lower()]
+    for col in atr_cols:
+        if col in df_norm.columns:
+            df_norm[col] = df_norm[col].rank(pct=True)
+
+    # 5. OSCILLATORS -> Z-score clipped
+    osc_cols = [c for c in df.columns if any(p in c.lower() for p in ['macd', 'momentum', 'roc', 'cci', 'adx'])]
+    for col in osc_cols:
+        if col in df_norm.columns:
+            mean_val = df_norm[col].mean()
+            std_val = df_norm[col].std()
+            if std_val > 0:
+                df_norm[col] = (df_norm[col] - mean_val) / std_val
+                df_norm[col] = df_norm[col].clip(-3, 3)
+
+    # 6. FINAL CLIP: Everything in [-10, 10] as safety net
+    for col in df_norm.columns:
+        df_norm[col] = df_norm[col].clip(-10, 10)
+
+    return df_norm
+
+
 class GoldTradingEnvAgent8(gym.Env):
     """
     Environnement Gymnasium pour trading Gold - AGENT 8 MEAN REVERSION (SAC)
@@ -152,7 +220,9 @@ class GoldTradingEnvAgent8(gym.Env):
         """
         super().__init__()
 
-        self.features_df = features_df
+        # WALL STREET NORMALIZATION (2025-12-02)
+        # Apply normalization to features BEFORE storing
+        self.features_df = normalize_features_wallstreet(features_df)
         self.prices_df = prices_df
         self.initial_balance = initial_balance
         self.max_episode_steps = max_episode_steps
